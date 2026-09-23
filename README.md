@@ -23,31 +23,14 @@ reliability domain established in the paper, and the construction conditions
 of the selected conic or moment branch. It returns an action only when all
 applicable conditions pass. Otherwise it reports every failed condition.
 
-## Installation
+## Requirements
 
-```bash
-python -m pip install -e .
-```
+Python 3.11 or newer with NumPy. No package installation or project setup is
+required. Download `2FAST.py` and run it directly.
 
 ## Command-line use
 
 Five independent coefficients:
-
-```bash
-2fast free \
-  --a-h 1.1 --a-s 1 \
-  --lambda-h 1 --lambda-s 1 --lambda-hs 3
-```
-
-Singlet-model coefficients:
-
-```bash
-2fast ssm \
-  --m-s 100 --lambda-s 0.1 \
-  --lambda-hs 0.46 --temperature 80
-```
-
-The source checkout can also be run without installation:
 
 ```bash
 python 2FAST.py free \
@@ -55,23 +38,15 @@ python 2FAST.py free \
   --lambda-h 1 --lambda-s 1 --lambda-hs 3
 ```
 
-Add `--json` for machine-readable output.
+Singlet-model coefficients:
 
-## Python API
-
-```python
-from twofast import estimate_quartic_action, estimate_ssm_action
-
-free = estimate_quartic_action(1.1, 1.0, 1.0, 1.0, 3.0)
-ssm = estimate_ssm_action(100.0, 0.1, 0.46, 80.0)
-
-if ssm.valid:
-    print(ssm.action)       # S3
-    print(ssm.s3_over_t)   # S3/T
-else:
-    for failure in ssm.failures:
-        print(failure.stage, failure.code, failure.message)
+```bash
+python 2FAST.py ssm \
+  --m-s 100 --lambda-s 0.1 \
+  --lambda-hs 0.46 --temperature 80
 ```
+
+Add `--json` for machine-readable output.
 
 For four-dimensional thermal coefficients, `action` is \(S_3\). For
 dimensionally reduced three-dimensional coefficients, `action` is already the
