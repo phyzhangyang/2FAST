@@ -146,7 +146,7 @@ def _finite_positive(name: str, value: float, failures: list[FailedCondition]) -
         failures.append(
             FailedCondition(
                 f"invalid_{name}",
-                f"{name} 必须是有限正数",
+                f"{name} must be a finite positive number",
                 float(value),
                 f"{name} > 0",
                 "input",
@@ -185,7 +185,7 @@ def _validate_quartic(
         failures.append(
             FailedCondition(
                 "mixed_barrier",
-                "混合耦合不足以使两个轴上极小值由势垒分开",
+                "The mixed coupling is too small to separate the two axis minima by a barrier",
                 eta,
                 "eta > 0",
                 "physics",
@@ -195,7 +195,7 @@ def _validate_quartic(
         failures.append(
             FailedCondition(
                 "vacuum_ordering",
-                "(v,0) 不是比 (0,w) 更深的真空",
+                "The vacuum (v, 0) is not deeper than the false vacuum (0, w)",
                 d,
                 "d > 0",
                 "physics",
@@ -205,7 +205,7 @@ def _validate_quartic(
         failures.append(
             FailedCondition(
                 "false_vacuum_metastability",
-                "(0,w) 在 h 方向已失稳，不再是所需的亚稳假真空",
+                "The false vacuum (0, w) is unstable along the h direction",
                 epsilon,
                 "epsilon < 1",
                 "physics",
@@ -215,7 +215,7 @@ def _validate_quartic(
         failures.append(
             FailedCondition(
                 "metastable_interval",
-                "参数不在论文研究的亚稳区间",
+                "The parameters lie outside the metastable interval considered in the paper",
                 epsilon,
                 "epsilon > 0",
                 "physics",
@@ -233,7 +233,7 @@ def _validate_quartic(
             failures.append(
                 FailedCondition(
                     "validated_depth_domain",
-                    "强混合势垒分支的真空深度差超出数值验证域",
+                    "The vacuum-depth difference of the strong-barrier branch is outside the validated domain",
                     d,
                     "d < 1",
                     "validation_domain",
@@ -245,7 +245,7 @@ def _validate_quartic(
             failures.append(
                 FailedCondition(
                     "validated_gradient_domain",
-                    "两场的梯度代价相差过大，超出数值验证域",
+                    "The field-gradient costs are too different for the validated domain",
                     gamma,
                     "0.5 < gamma < 2",
                     "validation_domain",
@@ -255,9 +255,9 @@ def _validate_quartic(
         failures.append(
             FailedCondition(
                 "validated_branch_domain",
-                "该强势垒且接近失稳的区域未获得论文的精度验证",
+                "No accuracy validation is available for this strong-barrier region near loss of metastability",
                 epsilon,
-                "eta >= 1 时需 epsilon < 0.4",
+                "eta >= 1 requires epsilon < 0.4",
                 "validation_domain",
             )
         )
@@ -321,7 +321,8 @@ def _gauss_integral(
         values = np.asarray(function(radius), dtype=float)
         if np.any(~np.isfinite(values)):
             raise _ConstructionError(
-                "nonfinite_integrand", "最终作用量积分中出现非有限值"
+                "nonfinite_integrand",
+                "The final action integrand contains a non-finite value",
             )
         total += 0.5 * (right - left) * float(np.dot(weights, values))
     return total
@@ -378,9 +379,9 @@ def _conic_action(
     if len(nonnegative) != 1:
         raise _ConstructionError(
             "conic_root",
-            "中点法向平衡方程没有唯一的非负实根",
+            "The midpoint normal-balance equation does not have a unique nonnegative real root",
             value=float(len(nonnegative)),
-            requirement="恰有一个 c >= 0 的实根",
+            requirement="exactly one real root with c >= 0",
         )
     c = nonnegative[0]
     w_mid = (c_sum * (2.0 * c**2 - 1.0) + p_mix) / (
@@ -389,7 +390,7 @@ def _conic_action(
     if w_mid <= 0.0 or not np.isfinite(w_mid):
         raise _ConstructionError(
             "conic_barrier",
-            "辅助势垒的中点高度不是正数",
+            "The midpoint height of the auxiliary barrier is not positive",
             value=w_mid,
             requirement="W_m > 0",
         )
@@ -430,7 +431,7 @@ def _conic_action(
     if abs(beta) >= 0.95:
         raise _ConstructionError(
             "conic_asymmetry",
-            "规则化圆锥壁的非对称参数超出允许范围",
+            "The asymmetry parameter of the regularized conic wall is outside its allowed range",
             value=beta,
             requirement="|beta| < 0.95",
         )
@@ -451,7 +452,7 @@ def _conic_action(
         if np.any(restoring <= 0.0):
             raise _ConstructionError(
                 "transverse_restoring_force",
-                "局域法向修正遇到非正的横向恢复系数",
+                "The local normal correction encounters a nonpositive transverse restoring coefficient",
                 value=float(np.min(restoring)),
                 requirement="M_perp^2 > 0",
             )
@@ -474,7 +475,7 @@ def _conic_action(
     if not np.isfinite(action) or action <= 0.0:
         raise _ConstructionError(
             "nonpositive_action",
-            "圆锥分支没有得到有限正作用量",
+            "The conic branch did not produce a finite positive action",
             value=action,
             requirement="S_c > 0",
         )
@@ -564,7 +565,7 @@ def _moment_action(
     if lambda_barrier <= 0.0:
         raise _ConstructionError(
             "ellipse_barrier",
-            "椭圆辅助路径没有正势垒",
+            "The auxiliary ellipse does not have a positive barrier",
             value=lambda_barrier,
             requirement="Lambda > 0",
         )
@@ -581,7 +582,7 @@ def _moment_action(
         if float(restoring) <= 0.0:
             raise _ConstructionError(
                 "seed_restoring_force",
-                "椭圆中点的辅助法向恢复系数不是正数",
+                "The auxiliary transverse restoring coefficient at the ellipse midpoint is not positive",
                 value=float(restoring),
                 requirement="D_nu > 0",
             )
@@ -609,9 +610,9 @@ def _moment_action(
     if h0 <= 0.0 or w0 <= 0.0:
         raise _ConstructionError(
             "wall_seed",
-            "变量振幅分支的壁极限种子不是正定的",
+            "The wall-limit seed of the variable-amplitude branch is not positive definite",
             value=min(h0, w0),
-            requirement="H_0 > 0 且 W_0 > 0",
+            requirement="H_0 > 0 and W_0 > 0",
         )
 
     length0_sq = h0 / (8.0 * w0)
@@ -639,7 +640,8 @@ def _moment_action(
         or length_star_sq <= 0.0
     ):
         raise _ConstructionError(
-            "moment_seed", "变量振幅分支的初始参数无效"
+            "moment_seed",
+            "The initial parameters of the variable-amplitude branch are invalid",
         )
 
     g_b = 4.0 * h0 - 2.0 * (v**2 + w**2)
@@ -704,7 +706,8 @@ def _moment_action(
             candidates.append(b_value)
     if not candidates:
         raise _ConstructionError(
-            "moment_root", "振幅代数方程没有满足稳定性筛选的正实根"
+            "moment_root",
+            "The algebraic amplitude equation has no positive real root passing the stability selection",
         )
     b_value = min(candidates, key=lambda item: abs(item - b_star))
     alpha = _log_sinh_positive(b_value / 2.0)
@@ -716,7 +719,8 @@ def _moment_action(
     potential_value = float(np.real(potential_final(b_value)))
     if kinetic_value <= 0.0 or potential_value >= 0.0:
         raise _ConstructionError(
-            "moment_scale", "恢复物理振幅后不能得到正的径向尺度"
+            "moment_scale",
+            "No positive radial scale remains after restoring the physical amplitude",
         )
     length_sq = -kinetic_value / (3.0 * potential_value)
     length = sqrt(length_sq)
@@ -724,14 +728,14 @@ def _moment_action(
     if abs(beta) >= 0.85:
         raise _ConstructionError(
             "moment_asymmetry",
-            "变量振幅分支的非对称参数超出允许范围",
+            "The asymmetry parameter of the variable-amplitude branch is outside its allowed range",
             value=beta,
             requirement="|beta| < 0.85",
         )
     if not (-8.0 < alpha < 4000.0):
         raise _ConstructionError(
             "moment_amplitude_range",
-            "变量振幅超出数值处方允许范围",
+            "The variable amplitude is outside the allowed numerical range",
             value=alpha,
             requirement="-8 < alpha < 4000",
         )
@@ -758,7 +762,7 @@ def _moment_action(
         if np.any(restoring <= 0.0):
             raise _ConstructionError(
                 "transverse_restoring_force",
-                "局域法向修正遇到非正的横向恢复系数",
+                "The local normal correction encounters a nonpositive transverse restoring coefficient",
                 value=float(np.min(restoring)),
                 requirement="M_perp^2 > 0",
             )
@@ -804,7 +808,7 @@ def _moment_action(
     if not np.isfinite(action) or action <= 0.0:
         raise _ConstructionError(
             "nonpositive_action",
-            "变量振幅分支没有得到有限正作用量",
+            "The variable-amplitude branch did not produce a finite positive action",
             value=action,
             requirement="S_m > 0",
         )
@@ -841,7 +845,7 @@ def estimate_quartic_action(
         failures.append(
             FailedCondition(
                 "invalid_temperature",
-                "temperature 必须是有限正数",
+                "temperature must be a finite positive number",
                 float(temperature),
                 "T > 0",
                 "input",
@@ -928,28 +932,28 @@ def estimate_ssm_action(
             (
                 mu_s_sq > 0.0,
                 "ssm_singlet_mass",
-                "零温参数不能产生论文要求的 singlet 相热历史",
+                "The zero-temperature parameters do not support the required singlet-phase thermal history",
                 mu_s_sq,
                 "mu_s^2 > 0",
             ),
             (
                 lambda_hs > 2.0 * sqrt(lambda_h * lambda_s),
                 "ssm_barrier",
-                "混合耦合不足以在两轴相之间形成势垒",
+                "The mixed coupling is too small to form a barrier between the two axis phases",
                 lambda_hs,
                 "lambda_hs > 2 sqrt(lambda_h lambda_s)",
             ),
             (
                 mu_s_sq / c_s > mu_h_sq / c_h,
                 "ssm_phase_order",
-                "降温时不是 singlet 方向先发生失稳",
+                "The singlet direction does not become unstable first during cooling",
                 mu_s_sq / c_s - mu_h_sq / c_h,
                 "mu_s^2/c_s > mu_h^2/c_h",
             ),
             (
                 mu_s_sq / sqrt(lambda_s) < mu_h_sq / sqrt(lambda_h),
                 "ssm_zero_temperature_vacuum",
-                "零温时 Higgs 轴真空不是更深的真空",
+                "The Higgs-axis vacuum is not the deeper vacuum at zero temperature",
                 mu_s_sq / sqrt(lambda_s) - mu_h_sq / sqrt(lambda_h),
                 "mu_s^2/sqrt(lambda_s) < mu_h^2/sqrt(lambda_h)",
             ),
@@ -1004,11 +1008,13 @@ def estimate_ssm_action(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="2FAST.py",
-        description="双标量场四次势非迭代半解析作用量估算器",
+        description="Non-iterative semianalytic action estimator for two-field quartic potentials",
     )
     subparsers = parser.add_subparsers(dest="input_type", required=True)
 
-    free = subparsers.add_parser("free", help="输入五个独立势参数")
+    free = subparsers.add_parser(
+        "free", help="use five independent potential coefficients"
+    )
     free.add_argument("--a-h", type=float, required=True)
     free.add_argument("--a-s", type=float, required=True)
     free.add_argument("--lambda-h", type=float, required=True)
@@ -1017,7 +1023,9 @@ def _parser() -> argparse.ArgumentParser:
     free.add_argument("--temperature", type=float)
     free.add_argument("--json", action="store_true")
 
-    ssm = subparsers.add_parser("ssm", help="输入 Z2 singlet model 参数")
+    ssm = subparsers.add_parser(
+        "ssm", help="use parameters of the Z2-symmetric singlet model"
+    )
     ssm.add_argument("--m-s", type=float, required=True)
     ssm.add_argument("--lambda-s", type=float, required=True)
     ssm.add_argument("--lambda-hs", type=float, required=True)
@@ -1028,26 +1036,26 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _print_human(result: ActionEstimate) -> None:
-    print(f"满足全部判断条件: {'是' if result.valid else '否'}")
+    print(f"All conditions satisfied: {'yes' if result.valid else 'no'}")
     if result.shape:
         values = ", ".join(
             f"{name}={value:.8g}" for name, value in result.shape.items()
         )
-        print(f"形状参数: {values}")
+        print(f"Shape parameters: {values}")
     if result.branch:
-        print(f"估算分支: {result.branch}")
+        print(f"Estimator branch: {result.branch}")
     if result.valid:
         print(f"S = {result.action:.12g}")
         if result.s3_over_t is not None:
             print(f"S3/T = {result.s3_over_t:.12g}")
         return
 
-    print("未通过的条件:")
+    print("Failed conditions:")
     for failure in result.failures:
         detail = (
-            f"，当前值={failure.value:.8g}" if failure.value is not None else ""
+            f", value={failure.value:.8g}" if failure.value is not None else ""
         )
-        required = f"，要求 {failure.requirement}" if failure.requirement else ""
+        required = f", requires {failure.requirement}" if failure.requirement else ""
         print(
             f"- [{failure.stage}/{failure.code}] "
             f"{failure.message}{detail}{required}"
