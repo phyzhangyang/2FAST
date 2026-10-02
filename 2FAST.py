@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """2FAST: a non-iterative action estimator for two-field quartic potentials.
 
-This module implements the prescription in the associated 2FAST paper.  It is
-deliberately limited to
+This module implements the prescription in the associated 2FAST work together
+with its independently validated finite-depth correction.  It is deliberately
+limited to
 
     V(h, s) = -a_h h^2/2 - a_s s^2/2
               + lambda_h h^4/4 + lambda_s s^4/4
@@ -224,8 +225,8 @@ def _validate_quartic(
     if failures:
         return shape, None, failures
 
-    # Equation (domain) of the paper.  This is an empirical reliability domain,
-    # not a physical phase boundary.
+    # Refined empirical reliability domain.  This is not a physical phase
+    # boundary.
     branch: str | None = None
     if eta >= 1.0 and epsilon < 0.4:
         branch = "conic"
@@ -240,7 +241,7 @@ def _validate_quartic(
                 )
             )
     elif 0.0 < eta < 1.0:
-        branch = "moment"
+        branch = "conic" if eta >= 0.4 and epsilon < 0.4 else "moment"
         if not (0.5 < gamma < 2.0):
             failures.append(
                 FailedCondition(
@@ -248,6 +249,31 @@ def _validate_quartic(
                     "The field-gradient costs are too different for the validated domain",
                     gamma,
                     "0.5 < gamma < 2",
+                    "validation_domain",
+                )
+            )
+        if branch == "moment" and eta >= 0.8:
+            failures.append(
+                FailedCondition(
+                    "validated_moment_barrier_domain",
+                    "The mixed barrier is too strong for the validated variable-amplitude branch",
+                    eta,
+                    "eta < 0.8 unless eta >= 0.4 and epsilon < 0.4 selects the conic branch",
+                    "validation_domain",
+                )
+            )
+        elif (
+            branch == "moment"
+            and eta > 0.7
+            and gamma > 1.5
+            and epsilon > 0.8
+        ):
+            failures.append(
+                FailedCondition(
+                    "validated_soft_corner_domain",
+                    "This asymmetric soft-wall corner lies outside the refined validation domain",
+                    eta,
+                    "not (eta > 0.7 and gamma > 1.5 and epsilon > 0.8)",
                     "validation_domain",
                 )
             )
@@ -273,6 +299,25 @@ def _dimensionless_potential(shape: dict[str, float]) -> _Potential:
         lambda_s=1.0,
         lambda_hs=2.0 * gamma * (1.0 + eta),
     )
+
+
+def _conic_log_calibration(shape: dict[str, float]) -> float:
+    """Low-order finite-depth correction for the strong-barrier wall branch."""
+
+    gamma, eta, d = shape["gamma"], shape["eta"], shape["d"]
+    z = log(1.0 + eta)
+    u = log(gamma)
+    coefficients = (
+        0.03142780,
+        -0.05349300,
+        0.01767113,
+        -0.00409923,
+        0.01388684,
+        0.00622262,
+        -0.01471904,
+    )
+    terms = (1.0, z, z**2, d, z * d, u, u**2)
+    return float(sum(coefficient * term for coefficient, term in zip(coefficients, terms)))
 
 
 def _log_cosh(x: np.ndarray | float) -> np.ndarray:
@@ -552,7 +597,10 @@ def _polynomial_coefficients(poly: Polynomial, size: int = 4) -> np.ndarray:
 
 
 def _moment_action(
-    potential: _Potential, shape: dict[str, float]
+    potential: _Potential,
+    shape: dict[str, float],
+    *,
+    soft_weight_power: float = 4.0,
 ) -> tuple[float, dict[str, float]]:
     gamma, eta, epsilon = shape["gamma"], shape["eta"], shape["epsilon"]
     v, w = potential.v, potential.w
@@ -628,7 +676,7 @@ def _moment_action(
     k2 = j2 - j4
     amplitude_soft_sq = 4.0 * mass_h_false_sq * j2 / (soft_g * j4)
     length_soft_sq = k2 / (3.0 * mass_h_false_sq * j2)
-    weight = epsilon**4
+    weight = epsilon**soft_weight_power
     alpha_star = (1.0 - weight) * alpha0 + weight * log(
         sqrt(amplitude_soft_sq) / v
     )
@@ -860,8 +908,24 @@ def estimate_quartic_action(
     try:
         if branch == "conic":
             reduced_action, diagnostics = _conic_action(potential, shape)
+            if shape["eta"] >= 1.0:
+                uncalibrated = reduced_action
+                log_calibration = _conic_log_calibration(shape)
+                reduced_action *= np.exp(-log_calibration)
+                diagnostics = {
+                    **diagnostics,
+                    "uncalibrated_reduced_action": uncalibrated,
+                    "conic_log_calibration": log_calibration,
+                }
         else:
-            reduced_action, diagnostics = _moment_action(potential, shape)
+            soft_weight_power = 1.5
+            reduced_action, diagnostics = _moment_action(
+                potential, shape, soft_weight_power=soft_weight_power
+            )
+            diagnostics = {
+                **diagnostics,
+                "soft_weight_power": soft_weight_power,
+            }
     except _ConstructionError as error:
         return ActionEstimate(
             False,
