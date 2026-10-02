@@ -32,29 +32,12 @@ d=\frac{a_h}{\gamma a_s}-1,\qquad
 \epsilon=\frac{d}{\eta}.
 \]
 
-The revised prescription makes three changes to the original implementation.
-It uses the conic construction also for
-\(0.4\leq\eta<1\) when \(\epsilon<0.4\), changes the soft-limit interpolation
-weight of the moment branch from \(\epsilon^4\) to
-\(\epsilon^{3/2}\), and applies a finite-depth correction to the strong-barrier
-conic result. The last correction is
-
-\[
-S_{\rm c}^{\rm corr}=S_{\rm c}\exp(-\Delta_{\rm c}),
-\]
-
-\[
-\begin{split}
-\Delta_{\rm c}={}&0.03142780-0.05349300z+0.01767113z^2
--0.00409923d+0.01388684zd\\
-&+0.00622262u-0.01471904u^2,
-\end{split}
-\qquad z=\ln(1+\eta),\quad u=\ln\gamma.
-\]
-
-This calibration is used only for the original strong-barrier region
-\(\eta\geq1\). The refined moment domain requires \(\eta<0.8\) and excludes
-the corner \(\eta>0.7\), \(\gamma>1.5\), and \(\epsilon>0.8\).
+The current prescription uses the conic construction for
+\(\eta\geq0.4\) when \(\epsilon<0.4\). The variable-amplitude branch uses the
+soft-limit interpolation weight \(\epsilon^{3/2}\). Its refined domain
+requires \(\eta<0.8\) and excludes the corner \(\eta>0.7\),
+\(\gamma>1.5\), and \(\epsilon>0.8\). The complete expressions are given in
+the associated work.
 
 ## Requirements
 
@@ -87,13 +70,15 @@ dimensionless exponent \(B\).
 
 ## Scope
 
-The reliability cuts and the finite-depth correction are empirical rather than
-physical phase boundaries or rigorous error bounds. They were developed on a
-10,000-point sample and checked on a separate 5,000-point sample. On the 4,765
-holdout points retained by the refined domain, the mean absolute relative error
-against PhaseTracer was 0.42 percent, the 95th percentile was 1.40 percent, and
-the maximum was 4.50 percent. PhaseTracer tightening and independent
-CosmoTransitions checks were used to test the large-error tail.
+The reliability cuts and numerical coefficients of the estimator are
+empirical rather than physical phase boundaries or rigorous error bounds. They
+were developed on a 10,000-point sample and checked on a fresh 5,000-point
+sample after the unified conic factor was fixed. The mean absolute relative
+error against PhaseTracer was 0.39 percent, the 95th percentile was 1.36
+percent, and 4,998 of the 5,000 actions were within 5 percent. For the 3,251
+conic points, the corresponding values were 0.25 percent, 0.63 percent, and
+100 percent. PhaseTracer tightening and independent CosmoTransitions checks
+were used to test the large-error tail in the preceding validation.
 
 The program calculates the bounce-action exponent only. It does not calculate
 a one-loop prefactor.

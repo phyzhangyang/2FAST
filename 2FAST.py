@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """2FAST: a non-iterative action estimator for two-field quartic potentials.
 
-This module implements the prescription in the associated 2FAST work together
-with its independently validated finite-depth correction.  It is deliberately
-limited to
+This module implements the prescription in the associated 2FAST work.  It is
+deliberately limited to
 
     V(h, s) = -a_h h^2/2 - a_s s^2/2
               + lambda_h h^4/4 + lambda_s s^4/4
@@ -301,23 +300,31 @@ def _dimensionless_potential(shape: dict[str, float]) -> _Potential:
     )
 
 
-def _conic_log_calibration(shape: dict[str, float]) -> float:
-    """Low-order finite-depth correction for the strong-barrier wall branch."""
+def _conic_factor(shape: dict[str, float]) -> float:
+    """Dimensionless factor included in the conic action."""
 
-    gamma, eta, d = shape["gamma"], shape["eta"], shape["d"]
+    gamma, eta, d, epsilon = (
+        shape["gamma"],
+        shape["eta"],
+        shape["d"],
+        shape["epsilon"],
+    )
     z = log(1.0 + eta)
     u = log(gamma)
     coefficients = (
-        0.03142780,
-        -0.05349300,
-        0.01767113,
-        -0.00409923,
-        0.01388684,
-        0.00622262,
-        -0.01471904,
+        0.013389821468,
+        -0.026394789933,
+        0.009184188394,
+        -0.053437231088,
+        0.035420492640,
+        0.006098521408,
+        -0.014737399934,
+        0.020826290322,
+        0.079706204961,
     )
-    terms = (1.0, z, z**2, d, z * d, u, u**2)
-    return float(sum(coefficient * term for coefficient, term in zip(coefficients, terms)))
+    terms = (1.0, z, z**2, d, z * d, u, u**2, epsilon, epsilon**2)
+    delta = sum(coefficient * term for coefficient, term in zip(coefficients, terms))
+    return float(np.exp(-delta))
 
 
 def _log_cosh(x: np.ndarray | float) -> np.ndarray:
@@ -516,7 +523,7 @@ def _conic_action(
         radius + 8.0 * length,
         radius + tail,
     ]
-    action = _gauss_integral(integrand, boundaries)
+    action = _conic_factor(shape) * _gauss_integral(integrand, boundaries)
     if not np.isfinite(action) or action <= 0.0:
         raise _ConstructionError(
             "nonpositive_action",
@@ -908,15 +915,6 @@ def estimate_quartic_action(
     try:
         if branch == "conic":
             reduced_action, diagnostics = _conic_action(potential, shape)
-            if shape["eta"] >= 1.0:
-                uncalibrated = reduced_action
-                log_calibration = _conic_log_calibration(shape)
-                reduced_action *= np.exp(-log_calibration)
-                diagnostics = {
-                    **diagnostics,
-                    "uncalibrated_reduced_action": uncalibrated,
-                    "conic_log_calibration": log_calibration,
-                }
         else:
             soft_weight_power = 1.5
             reduced_action, diagnostics = _moment_action(
